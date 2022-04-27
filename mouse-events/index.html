@@ -4,7 +4,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <script src="https://unpkg.com/rxjs@^7/dist/bundles/rxjs.umd.min.js"></script>
+  <script src="./rxjs.umd.min.js"></script>
   <style>
     #square {
       width: 200px;
@@ -14,12 +14,37 @@
   </style>
 </head>
 <body>
-  <div id="square">
+  <div id="square" >
 
   </div>
-  position: <span id> </span>
+  position: <span id="currentPosition"> </span>
 </body>
 <script>
-  fromEvent('#square')
+  const square = document.getElementById('square');
+  const currentPosition = document.getElementById('currentPosition')
+
+  const displayPosition = (e) => {
+    currentPosition.innerHTML = `
+    x: ${e.offsetX};\n
+    y: ${e.offsetY};
+    `
+  }
+
+  const onClick = () => {
+    const backgroundColor = Math.floor(Math.random()*16777215).toString(16);
+    square.style.backgroundColor = `#${backgroundColor}`;
+  }
+
+  rxjs.fromEvent(square, 'click')
+    .pipe(
+      rxjs.tap(onClick)
+    )
+    .subscribe()
+
+  rxjs.fromEvent(square, 'mousemove')
+    .pipe(
+      rxjs.tap(displayPosition)
+    )
+    .subscribe()
 </script>
 </html>
