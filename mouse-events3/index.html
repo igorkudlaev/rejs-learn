@@ -33,11 +33,13 @@
       </tr>
     </table>
   </table>
+  <img id="image" src="" alt="Lol" >
 </body>
 <script>
   const square = document.getElementById('square');
   const currentPosition = document.getElementById('currentPosition')
   const table = document.getElementById('params')
+  const random = (min, max) => Math.floor(Math.random() * (max - min)) + min;
 
   const displayPosition = (e) => {
     currentPosition.innerHTML = `
@@ -46,16 +48,44 @@
     `
   }
 
-  const onClick = () => {
-    const backgroundColor = Math.floor(Math.random()*16777215).toString(16);
-    square.style.backgroundColor = `#${backgroundColor}`;
+  const onChangeColor = (color) => {
+    square.style.backgroundColor = color;
   }
 
-  rxjs.fromEvent(square, 'click')
+  const displayImage = (color) => {
+    const image = document.getElementById('image')
+    let image$;
+    switch (color) {
+      case 'red':
+      case 'yellow':
+        image$ = rxjs.ajax.ajax.getJSON('./dogs.json').pipe(
+          rxjs.map((array) => array[random(0, array.length)]),
+        )
+        break;
+      default:
+        image$ = new rxjs.Observable(subscriber => {
+          subscriber.next('https://media-cdn.ykt2.ru/upload/photo/2021/06/21/normal/49018c47-50d3-44be-95e8-c6c5f5380e5c.jpeg')
+        })
+        break;
+    }
+    image$.subscribe({
+      next: (value) => image.setAttribute('src', value),
+    })
+  }
+  
+
+  const colors$ = rxjs.of(['red', 'blue', 'yellow', 'green'])
+
+  const clicks$ = rxjs.fromEvent(square, 'click')
   .pipe(
-    rxjs.tap(onClick)
-  )
-  .subscribe()
+    rxjs.switchMap(() => colors$),
+    rxjs.map((array, index) => {
+      return array[index % array.length]
+    }),
+    rxjs.tap(onChangeColor),
+    rxjs.tap(displayImage)
+  ).subscribe()
+
 
   const showParams = (obj) => {
     document.getElementById('averageX').innerHTML = obj.averageX
