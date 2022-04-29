@@ -1,0 +1,92 @@
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="./rxjs.umd.min.js"></script>
+  <style>
+    #square {
+      width: 200px;
+      height: 200px;
+      background-color: gray;
+    }
+  </style>
+</head>
+<body>
+  <div id="square" >
+  </div>
+  position: <span id="currentPosition"> </span>
+  <table>
+    <tr>
+      <td>Attributes</td>
+      <td>Value</td>
+    </tr>
+    <tbody id="params">
+      <tr>
+        <td>AverageX</td>
+        <td id="averageX"></td>
+      </tr>
+      <tr>
+        <td>AverageY</td>
+        <td id="averageY"></td>
+      </tr>
+    </table>
+  </table>
+</body>
+<script>
+  const square = document.getElementById('square');
+  const currentPosition = document.getElementById('currentPosition')
+  const table = document.getElementById('params')
+
+  const displayPosition = (e) => {
+    currentPosition.innerHTML = `
+    x: ${e.offsetX};\n
+    y: ${e.offsetY};
+    `
+  }
+
+  const onClick = () => {
+    const backgroundColor = Math.floor(Math.random()*16777215).toString(16);
+    square.style.backgroundColor = `#${backgroundColor}`;
+  }
+
+  rxjs.fromEvent(square, 'click')
+  .pipe(
+    rxjs.tap(onClick)
+  )
+  .subscribe()
+
+  const showParams = (obj) => {
+    document.getElementById('averageX').innerHTML = obj.averageX
+    document.getElementById('averageY').innerHTML = obj.averageY
+  }
+
+  rxjs.fromEvent(square, 'mousemove')
+    .pipe(
+      rxjs.tap(displayPosition),
+      rxjs.map(e => ({
+        offsetX: e.offsetX,
+        offsetY: e.offsetY
+      })),
+      rxjs.scan((acc, val) => {
+        acc.movies += 1;
+        acc.sumX = acc.sumX + val.offsetX;
+        acc.sumY = acc.sumY + val.offsetY;
+        return acc;
+      }, {
+        sumX: 0,
+        sumY: 0,
+        movies: 0,
+      }),
+      rxjs.throttleTime(1000),
+      rxjs.tap((value) => {
+        showParams({
+          averageX: Math.floor(value.sumX / value.movies),
+          averageY: Math.floor(value.sumY / value.movies)
+        })
+      })
+    )
+    .subscribe()
+</script>
+</html>
